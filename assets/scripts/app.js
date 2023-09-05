@@ -12,12 +12,30 @@ const LOG_EVENT_MONSTER_ATTACK = 'PLAYER_MONSTER_ATTACK';
 const LOG_EVENT_PLAYER_HEAL = 'PLAYER_HEAL';
 const LOG_EVENT_GAME_OVER = 'GAME_OVER';
 
-const enteredValue = prompt('Choose maximum health for you and the monster', '100');
 
-let chosenMaxLife = parseInt(enteredValue);
 let battleLog = [];
+let lastLoggedEntry;
 
-if (isNaN(chosenMaxLife) || chosenMaxLife <= 0) chosenMaxLife = 100;
+const getMaxLifeValues = () => {
+    const enteredValue = prompt('Choose maximum health for you and the monster', '100');
+    const parsedValue = parseInt(enteredValue);
+
+    if (isNaN(parsedValue) || parsedValue <= 0) {
+        throw { message: 'Invalid user input, not a number!' };
+    }
+
+    return parsedValue;
+};
+
+let chosenMaxLife;
+
+try {
+    chosenMaxLife = getMaxLifeValues();
+} catch (error) {
+    console.log(error);
+    chosenMaxLife = 100;
+    alert('You entered something wrong, default value of 100 was used');
+}
 
 let currentMonsterHealth = chosenMaxLife;
 let currentPlayerHealth = chosenMaxLife;
@@ -146,6 +164,13 @@ const healPlayer = (healAmount) => {
 
     increasePlayerHealth(healValue);
     currentPlayerHealth += healValue;
+
+    writeToLog(
+        LOG_EVENT_PLAYER_HEAL,
+        healAmount,
+        currentMonsterHealth,
+        currentPlayerHealth
+    );
 };
 
 const attackHandler = () => {
@@ -161,7 +186,41 @@ const healPlayerHandler = () => {
     endRound(MONSTER_ATTACK_VALUE);
 };
 const printLogHandler = () => {
-    console.log(battleLog);
+    // (1) for
+    for (let i = 0; i < battleLog.length; i++) {
+        console.log(battleLog[i].event);
+    }
+
+    // (2 + 3) for of + for in (inside)
+    let i = 0;
+    for (const logEntry of battleLog) {
+        if (logEntry.event === LOG_EVENT_GAME_OVER) continue;
+
+        if (!lastLoggedEntry && lastLoggedEntry !== 0 || lastLoggedEntry < i) {
+            console.log(`#${i}`);
+
+            for (const key in logEntry) {
+                console.log(`${key} => ${logEntry[key]}`);
+            }
+
+            lastLoggedEntry = i;
+            break;
+        }
+
+        i++;
+    }
+
+    // (4) while
+    let j = 0;
+    while (j < battleLog.length) {
+        console.log(battleLog[j].value);
+
+        j++;
+    }
+
+    // (5) do { ... } while ( ... ) -->
+    // --> alternative to 'while' loop,
+    // body will always be executed at least for the first time!
 };
 
 attackBtn.addEventListener('click', attackHandler);
